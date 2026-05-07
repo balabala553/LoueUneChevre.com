@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-api:
+    name: Tests API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install API dependencies
+        run: npm install
+        working-directory: services/api
+
+      - name: Run API tests
+        run: npm test
+        working-directory: services/api
+
+  build-web:
+    name: Build Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Web dependencies
+        run: npm install
+        working-directory: apps/web
+
+      - name: Build Web
+        run: npm run build
+        working-directory: apps/web
+
+  docker-build:
+    name: Docker Build Check
+    runs-on: ubuntu-latest
+    needs: [test-api, build-web]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build API image
+        run: docker build -t loueunechevre-api ./services/api
+
+      - name: Build Web image
+        run: docker build -t loueunechevre-web ./apps/web
